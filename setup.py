@@ -8,5 +8,5 @@ setup(
     license='',
     author='kaydu',
     author_email='',
-    description='Miscroservice demo of Python.'
+    description='Microservice demo of Python.'
 )
