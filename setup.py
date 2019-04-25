@@ -1,12 +1,13 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='pyservice-demo',
     version='0.0.1',
-    packages=[''],
+    packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/NeonToo/pyservice-demo.git',
     license='',
     author='kaydu',
-    author_email='',
-    description='Microservice demo of Python.'
+    description='Microservice demo of Python.',
+    include_package_data=True,
+    exclude_package_date={'': ['.gitignore']},
 )
