@@ -1,3 +1,5 @@
+import datetime
+
 import tornado.web
 import tornado.ioloop
 from tornado.httpserver import HTTPServer
@@ -16,7 +18,8 @@ class FrontendHandler(tornado.web.RequestHandler):
     #     else:
     #         print(response.body)
     def get(self):
-        self.write("Hello, Py-frontend")
+        # self.write()
+        self.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def init_frontend():
