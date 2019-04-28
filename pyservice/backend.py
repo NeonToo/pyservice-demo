@@ -13,9 +13,9 @@ def init_backend():
         (r"/api", BackendHandler)
     ])
     server = HTTPServer(app)
-    server.listen(9002)
+    server.listen(9001)
 
-    print("Py-backend listening at port 9002\n")
+    print("Py-backend listening at port 9001\n")
 
     server.start(1)
     tornado.ioloop.IOLoop.instance().start()
