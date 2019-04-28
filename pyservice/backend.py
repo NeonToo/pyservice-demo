@@ -3,23 +3,23 @@ import tornado.ioloop
 from tornado.httpserver import HTTPServer
 
 
-class MainHandler(tornado.web.RequestHandler):
+class BackendHandler(tornado.web.RequestHandler):
     def get(self):
         self.write("Hello, Tornado")
 
 
-def init_app():
+def init_backend():
     app = tornado.web.Application([
-        (r"/", MainHandler)
+        (r"/api", BackendHandler)
     ])
     server = HTTPServer(app)
-    server.listen(8082)
+    server.listen(9002)
 
-    print("Py-service listening at port 8082\n")
+    print("Py-backend listening at port 9002\n")
 
     server.start(1)
-    tornado.ioloop.IOLoop.current().start()
+    tornado.ioloop.IOLoop.instance().start()
 
 
 if __name__ == "__main__":
-    init_app()
+    init_backend()
