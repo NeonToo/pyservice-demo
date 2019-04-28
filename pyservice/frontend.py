@@ -5,7 +5,7 @@ import tornado.ioloop
 from tornado.httpserver import HTTPServer
 from tornado.httpclient import AsyncHTTPClient
 
-from py_zipkin.zipkin import zipkin_span
+from py_zipkin.zipkin import zipkin_span, create_http_headers_for_new_span
 
 
 class FrontendHandler(tornado.web.RequestHandler):
@@ -17,28 +17,22 @@ class FrontendHandler(tornado.web.RequestHandler):
                 port=8081,
                 sample_rate=100
         ):
-            with zipkin_span(service_name='py-frontend', span_name='py-frontend'):
-                http_client = AsyncHTTPClient()
-
-                try:
-                    response = await http_client.fetch("http://localhost:9001/api")
-                except Exception as e:
-                    print('Error: %s' % e)
-                else:
-                    self.write("From Python Frontend Service: %s" % response.body)
-
-
-class ServiceHandler(tornado.web.RequestHandler):
-    async def get(self):
-        with zipkin_span(service_name='py-frontend', span_name='py-cross-service'):
-            http_client = AsyncHTTPClient()
+            # TODO ??? create_http_headers_for_new_span() 通知后端服务，但无效，仍然是两个独立的span
+            headers = {}
+            headers.update(create_http_headers_for_new_span())
+            request = tornado.httpclient.HTTPRequest(
+                url='http://localhost:9001/py',
+                method='GET',
+                headers=headers
+            )
 
             try:
-                response = await http_client.fetch("http://localhost:9000/api")
+                response = await AsyncHTTPClient().fetch(request)
             except Exception as e:
-                print('Error: %s' % e)
+                return "Error: %s" % e
             else:
-                self.write("From Python Frontend Service: %s" % response.body)
+                res = response
+                self.write("From Python Backend Cross API Service: %s" % response.body)
 
 
 def handle_http_transport(encoded_span):
@@ -51,8 +45,7 @@ def handle_http_transport(encoded_span):
 
 def init_frontend():
     app = tornado.web.Application([
-        (r"/", FrontendHandler),
-        (r"/cross", ServiceHandler)
+        (r"/", FrontendHandler)
     ])
     server = HTTPServer(app)
     server.listen(8081)
