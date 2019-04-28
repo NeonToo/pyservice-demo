@@ -25,7 +25,7 @@ class FrontendHandler(tornado.web.RequestHandler):
                 except Exception as e:
                     print('Error: %s' % e)
                 else:
-                    self.write("From Python Frontend Service: " % response.body)
+                    self.write("From Python Frontend Service: %s" % response.body)
 
 
 class ServiceHandler(tornado.web.RequestHandler):
@@ -38,7 +38,7 @@ class ServiceHandler(tornado.web.RequestHandler):
             except Exception as e:
                 print('Error: %s' % e)
             else:
-                self.write("From Python Frontend Service: " % response.body)
+                self.write("From Python Frontend Service: %s" % response.body)
 
 
 def handle_http_transport(encoded_span):
