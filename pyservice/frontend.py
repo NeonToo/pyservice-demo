@@ -1,4 +1,3 @@
-import datetime
 import requests
 
 import tornado.web
@@ -10,46 +9,36 @@ from py_zipkin.zipkin import zipkin_span
 
 
 class FrontendHandler(tornado.web.RequestHandler):
-    # def get(self):
-    #     self.write('Py-service OK')
     async def get(self):
         with zipkin_span(
                 service_name='py-frontend',
-                span_name='py-index',
+                span_name='py-frontend-index',
                 transport_handler=handle_http_transport,
-                port=8082,
+                port=8081,
                 sample_rate=100
         ):
             with zipkin_span(service_name='py-frontend', span_name='py-frontend'):
                 http_client = AsyncHTTPClient()
 
                 try:
-                    response = await http_client.fetch("http://localhost:9000/api")
+                    response = await http_client.fetch("http://localhost:9001/api")
                 except Exception as e:
                     print('Error: %s' % e)
                 else:
-                    self.write(response.body)
-    # def handle_request(self, response):
-    #     if response.error:
-    #         print("Error: " + response.error)
-    #     else:
-    #         print(response.body)
-    # def get(self):
-    #     with zipkin_span(
-    #             service_name='py-frontend',
-    #             span_name='py-index',
-    #             transport_handler=handle_http_transport,
-    #             port=8082,
-    #             sample_rate=100
-    #     ):
-    #         with zipkin_span(service_name='py-frontend', span_name='py-frontend'):
-    #             self.write(do_stuff())
+                    self.write("From Python Frontend Service: " % response.body)
 
 
-# class ServiceHandler(tornado.web.RequestHandler):
-#     def get(self):
-#         with zipkin_span(service_name='py-frontend', span_name='py-callback'):
-#
+class ServiceHandler(tornado.web.RequestHandler):
+    async def get(self):
+        with zipkin_span(service_name='py-frontend', span_name='py-cross-service'):
+            http_client = AsyncHTTPClient()
+
+            try:
+                response = await http_client.fetch("http://localhost:9000/api")
+            except Exception as e:
+                print('Error: %s' % e)
+            else:
+                self.write("From Python Frontend Service: " % response.body)
 
 
 def handle_http_transport(encoded_span):
@@ -63,7 +52,7 @@ def handle_http_transport(encoded_span):
 def init_frontend():
     app = tornado.web.Application([
         (r"/", FrontendHandler),
-        # (r"/api", ServiceHandler)
+        (r"/cross", ServiceHandler)
     ])
     server = HTTPServer(app)
     server.listen(8081)
