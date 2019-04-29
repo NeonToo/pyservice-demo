@@ -9,10 +9,12 @@ from py_zipkin.zipkin import zipkin_span, create_http_headers_for_new_span, Zipk
 
 
 class ServiceHandler(tornado.web.RequestHandler):
+
     async def get(self):
 
         root_headers = self.request.headers
 
+        # parent span 的属性传入到当前 span
         zipkin_attrs = ZipkinAttrs(
             trace_id=root_headers['X-B3-TraceID'],
             span_id=root_headers['X-B3-SpanID'],
@@ -23,45 +25,53 @@ class ServiceHandler(tornado.web.RequestHandler):
 
         with zipkin_span(
                 service_name='py-service_C',
-                span_name='py-span_C',
+                span_name='py-span_C-index',
                 zipkin_attrs=zipkin_attrs,
                 transport_handler=handle_http_transport,
                 port=9001,
                 sample_rate=100
-        ) as zipkin_context:
-            # TODO D/E 的调用在一个trace中且 ParentSpanID 为 C 的 SpanID，但与 C 没有形成层次结构
-            # with zipkin_span(service_name='py-service_D', span_name='py-service_D'):
-            # 跨服务通知 Python Service_D, 必须用 create_http_headers_for_new_span()
-            headers = {}
-            headers.update(create_http_headers_for_new_span())
-            request = tornado.httpclient.HTTPRequest(
-                url='http://localhost:9002/services/d',
-                method='GET',
-                headers=headers
-            )
+        ):
+            response = call_service_d()
+            self.write("Python Service_C calls: %s" % response)
 
-            try:
-                response = await AsyncHTTPClient().fetch(request)
-            except Exception as e:
-                return "Error: %s" % e
-            else:
-                self.write("Python Service_C calls: %s" % response.body)
+            response = call_service_e()
+            self.write("Python Service_C calls: %s" % response)
 
-            # with zipkin_span(service_name='py-service_E', span_name='py-service_E'):
-            # 跨服务通知 Java Service_E, 必须用 create_http_headers_for_new_span()
-            headers = create_http_headers_for_new_span()
-            request = tornado.httpclient.HTTPRequest(
-                url='http://localhost:9000/services/e',
-                method='GET',
-                headers=headers
-            )
 
-            try:
-                response = await AsyncHTTPClient().fetch(request)
-            except Exception as e:
-                return "Error: %s" % e
-            else:
-                self.write("Python Service_C calls: %s" % response.body)
+@zipkin_span(service_name='py-service_C', span_name='py-service_C->D')
+async def call_service_d():
+    # 跨服务通知 Python Service_D, 必须用 create_http_headers_for_new_span() 为当前调用生成 span header 传给下一个服务
+    headers = create_http_headers_for_new_span()
+    request = tornado.httpclient.HTTPRequest(
+        url='http://localhost:9002/services/d',
+        method='GET',
+        headers=headers
+    )
+
+    try:
+        response = await AsyncHTTPClient().fetch(request)
+    except Exception as e:
+        return "Error: %s" % e
+    else:
+        return response.body
+
+
+@zipkin_span(service_name='py-service_C', span_name='py-service_C->E')
+async def call_service_e():
+    # 跨服务通知 Java Service_E, 必须用 create_http_headers_for_new_span()
+    headers = create_http_headers_for_new_span()
+    request = tornado.httpclient.HTTPRequest(
+        url='http://localhost:9000/services/e',
+        method='GET',
+        headers=headers
+    )
+
+    try:
+        response = await AsyncHTTPClient().fetch(request)
+    except Exception as e:
+        return "Error: %s" % e
+    else:
+        return response.body
 
 
 def handle_http_transport(encoded_span):

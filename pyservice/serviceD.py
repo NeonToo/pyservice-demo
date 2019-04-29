@@ -8,12 +8,13 @@ from tornado.httpserver import HTTPServer
 from py_zipkin.zipkin import zipkin_span, ZipkinAttrs
 
 
-class ServiceHandler(tornado.web.RequestHandler):
+class ServiceDHandler(tornado.web.RequestHandler):
 
     async def get(self):
 
         headers = self.request.headers
 
+        # parent span 的属性传入到当前 span
         zipkin_attrs = ZipkinAttrs(
             trace_id=headers['X-B3-TraceID'],
             span_id=headers['X-B3-SpanID'],
@@ -24,7 +25,7 @@ class ServiceHandler(tornado.web.RequestHandler):
 
         with zipkin_span(
             service_name='py-service_D',
-            span_name='py-span_D',
+            span_name='py-span_D-index',
             zipkin_attrs=zipkin_attrs,
             transport_handler=handle_http_transport,
             port=9002,
@@ -43,7 +44,7 @@ def handle_http_transport(encoded_span):
 
 def init_service():
     app = tornado.web.Application([
-        (r"/services/d", ServiceHandler)
+        (r"/services/d", ServiceDHandler)
     ])
 
     server = HTTPServer(app)
