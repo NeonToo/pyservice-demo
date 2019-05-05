@@ -5,6 +5,7 @@ import tornado.ioloop
 from tornado.httpserver import HTTPServer
 from tornado.httpclient import AsyncHTTPClient
 
+from py_zipkin import Encoding
 from py_zipkin.zipkin import zipkin_span, create_http_headers_for_new_span, ZipkinAttrs
 
 
@@ -23,22 +24,18 @@ class ServiceHandler(tornado.web.RequestHandler):
             is_sampled=root_headers['X-B3-Sampled']
         )
 
-        # self.write('Into Py-Service_C the header attributes: \n')
-        # self.write('X-B3-SpanID: %s' % root_headers['X-B3-SpanID'])
-        # self.write('X-B3-ParentSpanID: %s' % root_headers['X-B3-ParentSpanID'])
-
         with zipkin_span(
-                service_name='py-service_C',
-                span_name='py-span_C-index',
-                zipkin_attrs=zipkin_attrs,
-                transport_handler=handle_http_transport,
-                port=9001,
-                sample_rate=100
+            service_name='py-service_C',
+            span_name='py-span_C-index',
+            zipkin_attrs=zipkin_attrs,
+            transport_handler=handle_http_transport,
+            port=9001,
+            sample_rate=100
         ):
             response_d = await call_service_d()
             self.write("Python Service_C calls: %s" % response_d)
 
-            response_e = await call_service_e()
+            response_e = await call_service_b()
             self.write("Python Service_C calls: %s" % response_e)
 
 
@@ -61,13 +58,13 @@ async def call_service_d():
         return response.body
 
 
-@zipkin_span(service_name='py-service_C', span_name='py-service_C->E')
-async def call_service_e():
+@zipkin_span(service_name='py-service_C', span_name='py-service_C->B')
+async def call_service_b():
 
-    # 跨服务通知 Java Service_E, 必须用 create_http_headers_for_new_span()
+    # 跨服务通知 Java Service_B, 必须用 create_http_headers_for_new_span()
     headers = create_http_headers_for_new_span()
     request = tornado.httpclient.HTTPRequest(
-        url='http://localhost:9000/services/e',
+        url='http://localhost:9000/services/b',
         method='GET',
         headers=headers
     )
