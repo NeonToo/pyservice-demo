@@ -14,7 +14,7 @@ class ServiceDHandler(tornado.web.RequestHandler):
 
         headers = self.request.headers
 
-        # parent span 的属性传入到当前 span
+        # 属性传入到当前 span，已经是为当前 span 生成的了
         zipkin_attrs = ZipkinAttrs(
             trace_id=headers['X-B3-TraceID'],
             span_id=headers['X-B3-SpanID'],
@@ -22,6 +22,10 @@ class ServiceDHandler(tornado.web.RequestHandler):
             flags=headers.get('X-B3-Flags', ''),
             is_sampled=headers['X-B3-Sampled']
         )
+
+        # self.write('Into Py-Service_D the header attributes: \n')
+        # self.write('X-B3-SpanID: %s' % headers['X-B3-SpanID'])
+        # self.write('X-B3-ParentSpanID: %s' % headers['X-B3-ParentSpanID'])
 
         with zipkin_span(
             service_name='py-service_D',
@@ -31,7 +35,12 @@ class ServiceDHandler(tornado.web.RequestHandler):
             port=9002,
             sample_rate=100
         ):
-            self.write("--- Python Service_D %s --- " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p"))
+            self.write(handle_service())
+
+
+@zipkin_span(service_name='py-service_D', span_name='py-service_D')
+def handle_service():
+    return "--- Python Service_D %s --- " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
 
 
 def handle_http_transport(encoded_span):
