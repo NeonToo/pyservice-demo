@@ -5,6 +5,9 @@ import tornado.web
 import tornado.ioloop
 from tornado.httpserver import HTTPServer
 
+from transport import http_transport
+
+from py_zipkin import Encoding
 from py_zipkin.zipkin import zipkin_span, ZipkinAttrs
 
 
@@ -33,12 +36,13 @@ class ServiceDHandler(tornado.web.RequestHandler):
             zipkin_attrs=zipkin_attrs,
             transport_handler=handle_http_transport,
             port=9002,
-            sample_rate=100
+            sample_rate=100,
+            encoding=Encoding.V2_JSON
         ):
             self.write(handle_service())
 
 
-@zipkin_span(service_name='py-service_D', span_name='py-service_D')
+# @zipkin_span(service_name='py-service_D', span_name='py-service_D')
 def handle_service():
     return "--- Python Service_D %s --- " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
 
@@ -46,7 +50,7 @@ def handle_service():
 def handle_http_transport(encoded_span):
     headers = {"Content-Type": "application/x-thrift"}
     body = encoded_span
-    zipkin_url = "http://localhost:9411/api/v1/spans"
+    zipkin_url = "http://localhost:9411/api/v2/spans"
 
     requests.post(zipkin_url, data=body, headers=headers)
 

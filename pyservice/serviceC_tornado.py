@@ -5,6 +5,8 @@ import tornado.ioloop
 from tornado.httpserver import HTTPServer
 from tornado.httpclient import AsyncHTTPClient
 
+from transport import http_transport
+
 from py_zipkin import Encoding
 from py_zipkin.zipkin import zipkin_span, create_http_headers_for_new_span, ZipkinAttrs
 
@@ -30,7 +32,8 @@ class ServiceHandler(tornado.web.RequestHandler):
             zipkin_attrs=zipkin_attrs,
             transport_handler=handle_http_transport,
             port=9001,
-            sample_rate=100
+            sample_rate=100,
+            encoding=Encoding.V2_JSON
         ):
             response_d = await call_service_d()
             self.write("Python Service_C calls: %s" % response_d)
@@ -39,7 +42,7 @@ class ServiceHandler(tornado.web.RequestHandler):
             self.write("Python Service_C calls: %s" % response_e)
 
 
-@zipkin_span(service_name='py-service_C', span_name='py-service_C->D')
+# @zipkin_span(service_name='py-service_C', span_name='py-service_C->D')
 async def call_service_d():
 
     # 跨服务通知 Python Service_D, 必须用 create_http_headers_for_new_span() 为当前调用生成 span header 传给下一个服务
@@ -58,7 +61,7 @@ async def call_service_d():
         return response.body
 
 
-@zipkin_span(service_name='py-service_C', span_name='py-service_C->B')
+# @zipkin_span(service_name='py-service_C', span_name='py-service_C->B')
 async def call_service_b():
 
     # 跨服务通知 Java Service_B, 必须用 create_http_headers_for_new_span()
@@ -78,7 +81,7 @@ async def call_service_b():
 
 
 def handle_http_transport(encoded_span):
-    zipkin_url = "http://localhost:9411/api/v1/spans"
+    zipkin_url = "http://localhost:9411/api/v2/spans"
 
     requests.post(
         zipkin_url,
