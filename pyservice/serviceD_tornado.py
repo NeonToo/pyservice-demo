@@ -48,7 +48,7 @@ def handle_service():
 
 
 def handle_http_transport(encoded_span):
-    headers = {"Content-Type": "application/x-thrift"}
+    headers = {"Content-Type": "application/json"}
     body = encoded_span
     zipkin_url = "http://localhost:9411/api/v2/spans"
 

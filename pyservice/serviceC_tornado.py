@@ -86,7 +86,7 @@ def handle_http_transport(encoded_span):
     requests.post(
         zipkin_url,
         data=encoded_span,
-        headers={"Content-Type": "application/x-thrift"}
+        headers={"Content-Type": "application/json"}
     )
 
 
