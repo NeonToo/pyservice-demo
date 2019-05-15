@@ -42,7 +42,7 @@ class ServiceDHandler(tornado.web.RequestHandler):
             self.write(handle_service())
 
 
-# @zipkin_span(service_name='py-service_D', span_name='py-service_D')
+@zipkin_span(service_name='py-service_D', span_name='py-service_D')
 def handle_service():
     return "--- Python Service_D %s --- " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
 
