@@ -5,8 +5,6 @@ import tornado.web
 import tornado.ioloop
 from tornado.httpserver import HTTPServer
 
-from transport import http_transport
-
 from py_zipkin import Encoding
 from py_zipkin.zipkin import zipkin_span, ZipkinAttrs
 
@@ -44,7 +42,7 @@ class ServiceDHandler(tornado.web.RequestHandler):
 
 @zipkin_span(service_name='py-service_D', span_name='py-service_D')
 def handle_service():
-    return "--- Python Service_D %s --- " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
+    return " *** Python Service_D %s *** " % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")
 
 
 def handle_http_transport(encoded_span):

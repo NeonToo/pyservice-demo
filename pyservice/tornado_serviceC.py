@@ -5,8 +5,6 @@ import tornado.ioloop
 from tornado.httpserver import HTTPServer
 from tornado.httpclient import AsyncHTTPClient
 
-from transport import http_transport
-
 from py_zipkin import Encoding
 from py_zipkin.zipkin import zipkin_span, create_http_headers_for_new_span, ZipkinAttrs
 
@@ -17,30 +15,29 @@ class ServiceHandler(tornado.web.RequestHandler):
 
         root_headers = self.request.headers
 
-
-        # 属性传入到当前 span，已经是为当前 span 生成的了
-        zipkin_attrs = ZipkinAttrs(
-            trace_id=root_headers['X-B3-TraceID'],
-            span_id=root_headers['X-B3-SpanID'],
-            parent_span_id=root_headers['X-B3-ParentSpanID'],
-            flags=root_headers.get('X-B3-Flags', '0'),
-            is_sampled=root_headers['X-B3-Sampled']
-        )
+        # # 属性传入到当前 span，已经是为当前 span 生成的了
+        # zipkin_attrs = ZipkinAttrs(
+        #     trace_id=root_headers['X-B3-TraceID'],
+        #     span_id=root_headers['X-B3-SpanID'],
+        #     parent_span_id=root_headers['X-B3-ParentSpanID'],
+        #     flags=root_headers.get('X-B3-Flags', '0'),
+        #     is_sampled=root_headers['X-B3-Sampled']
+        # )
 
         with zipkin_span(
             service_name='py-service_C',
             span_name='py-span_C-index',
-            zipkin_attrs=zipkin_attrs,
+            # zipkin_attrs=zipkin_attrs,
             transport_handler=handle_http_transport,
             port=9001,
             sample_rate=100,
             encoding=Encoding.V2_JSON
         ):
             response_d = await call_service_d()
-            self.write("Python Service_C calls: %s" % response_d)
+            self.write("*** Python Service_C *** calls: %s \n" % response_d.decode().strip())
 
             response_e = await call_service_b()
-            self.write("Python Service_C calls: %s" % response_e)
+            self.write("\n *** Python Service_C *** calls: %s " % response_e.decode().strip())
 
 
 @zipkin_span(service_name='py-service_C', span_name='py-service_C->D')
