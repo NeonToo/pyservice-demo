@@ -46,7 +46,7 @@ async def call_service_d():
     # 跨服务通知 Python Service_D, 必须用 create_http_headers_for_new_span() 为当前调用生成 span header 传给下一个服务
     headers = create_http_headers_for_new_span()
     request = tornado.httpclient.HTTPRequest(
-        url='http://localhost:9002/services/d',
+        url='http://localhost:9001/services/d',
         method='GET',
         headers=headers
     )
@@ -90,13 +90,13 @@ def handle_http_transport(encoded_span):
 
 def init_service():
     app = tornado.web.Application([
-        (r"/services/c", ServiceHandler)
+        (r"/", ServiceHandler)
     ])
 
     server = HTTPServer(app)
-    server.listen(9001)
+    server.listen(8081)
 
-    print("Py-service_C listening at port 9001\n")
+    print("Py-service_C listening at port 8081\n")
 
     server.start(1)
     tornado.ioloop.IOLoop.instance().start()

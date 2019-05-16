@@ -59,9 +59,9 @@ def init_service():
     ])
 
     server = HTTPServer(app)
-    server.listen(9002)
+    server.listen(9001)
 
-    print("Py-service_D listening at port 9002\n")
+    print("Py-service_D listening at port 9001\n")
 
     server.start(1)
     tornado.ioloop.IOLoop.instance().start()
