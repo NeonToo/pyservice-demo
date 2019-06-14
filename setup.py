@@ -11,8 +11,8 @@ def read_file(filename):
 
 
 install_requires = []
-if os.path.exists("requirement.txt"):
-    install_requires = read_file("requirement.txt").split()
+if os.path.exists("requirements.txt"):
+    install_requires = read_file("requirements.txt").split()
     if "win" in sys.platform:
         for item in ['pexpect']:
             try:
