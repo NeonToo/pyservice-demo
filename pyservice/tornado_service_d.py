@@ -30,7 +30,7 @@ class ServiceDHandler(tornado.web.RequestHandler):
         # get span context from request headers
         zipkin_attrs = create_zipkin_attr(self.request)
 
-        with zipkin_span(
+        with tracer.zipkin_span(
             use_128bit_trace_id=USE_128_TRACE_ID,
             service_name=SERVICE_NAME,
             span_name=span_name,
